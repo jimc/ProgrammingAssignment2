@@ -6,38 +6,45 @@
 
 ## requirements
 # not a universal cache, not transparent
-# user makes a diferent kind of matrix, using a different costructor
+# user makes a diferent kind of matrix, using a different constructor
 # inverse may not ever be needed, be lazy
 # cache must invalidate when matrix is changed.
 
 ## api description:
 
 # makeCacheMatrix( matrix ) returns an "object" which wraps/hides a matrix, 
-# providing instead a vector of 4 accessors & mutators; get retrieves the
-# matrix, set replaces the current value (and clears any cached inverse of the
+# providing instead a vector of 4 accessors & mutators; get retrieves the 
+# matrix, set replaces the current value (and clears any cached inverse of the 
 # previous value).  The 4 methods are closures on (x, inv) variables
-
 
 ## design
 
-# code uses <<- in the setter methods (set,setinv) to update x, inv symbols in 
+# code uses <<- in the setter methods (set,setinv) to update mtx, inv symbols in
 # the outer scope, ie not in the scope of the methods themselves, but that of 
-# makeCacheMatrix.  Since that environment are the same variables that the getter functions
-# close over, the getters share them, and thus make them available to the user.
+# makeCacheMatrix.  Since that environment contains the same variables (symbol
+# names) that the getter functions close over, the getters share them, and thus
+# make them available to the user.
 
-# this code is basically identical to cacheVectorMean code
-# but with var-name changes (with requisite break-fix)
+# this code is basically identical to the cacheVectorMean code example, but with
+# var-name changes (and the requisite break-fix-understand cycle)
 
 makeCacheMatrix <- function(mtx = matrix()) {
-        inv <- NULL
+
+        inv <- NULL            # local var, closed upon by seteinv
+        
+        # no mention of mtx needed, surely not <- NULL of arg just given
+        # mtx is enclosed by get
+        
         set <- function(nv) {
-                mtx <<- nv     # save
+                mtx <<- nv     # save new value
                 inv <<- NULL   # drop now-invalid cache
         }
         get <- function()
-                mtx
+                mtx            # closure on arg in outer scope fn
+        
         setinv <- function(nval)
                 inv <<- nval
+        
         getinv <- function()
                 inv
         list(
